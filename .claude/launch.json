@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "worklog-test",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:WORKLOG_DATA=\"$env:TEMP\\worklog-test-data\"; $env:WORKLOG_PORT='5055'; python server\\app.py"],
+      "port": 5055
+    }
+  ]
+}
