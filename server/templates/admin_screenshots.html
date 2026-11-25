@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Screenshots{% endblock %}
+{% block body %}
+<div class="head"><div><h1>Work PC screenshots</h1><div class="muted">{{ shots|length }} screenshot(s) on {{ day.strftime('%A, %B %d, %Y') }}</div></div></div>
+<div class="card">
+  <form method="get" class="row">
+    <div class="field"><label>Date</label><input type="date" name="date" value="{{ day }}"></div>
+    <div class="field"><label>Employee</label>
+      <select name="user"><option value="">All employees</option>
+        {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if u.id == uid }}>{{ u.full_name }}</option>{% endfor %}
+      </select></div>
+    <div class="field" style="flex:0 0 auto"><button class="btn">Show</button></div>
+  </form>
+</div>
+{% if shots %}
+<div class="shots">
+  {% for s in shots %}
+  <div class="shot">
+    <img src="{{ url_for('screenshot_file', sid=s.id) }}" data-full="{{ url_for('screenshot_file', sid=s.id) }}" loading="lazy" alt="Screenshot of {{ s.full_name }}">
+    <div><b>{{ s.full_name }}</b> · {{ s.ts[11:16] }}<div class="muted">{{ s.host }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><p class="muted" style="margin:0">No screenshots for this day. Screenshots are taken by the WorkLog Agent on the employee's work PC, only while they are timed in and not on break.</p></div>
+{% endif %}
+{% endblock %}

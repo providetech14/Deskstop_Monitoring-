@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+{% block body %}
+<div class="head"><div><h1>Employees &amp; accounts</h1><div class="muted">Create logins for employees and other HR admins.</div></div></div>
+
+<div class="card">
+  <h2>Add account</h2>
+  <form method="post">{{ csrf() }}
+    <div class="row">
+      <div class="field"><label>Full name</label><input name="full_name" required value="{{ form.full_name }}"></div>
+      <div class="field"><label>Position</label><input name="position" value="{{ form.position }}" placeholder="e.g. Graphic Designer"></div>
+      <div class="field"><label>Username</label><input name="username" required value="{{ form.username }}" placeholder="e.g. juan.delacruz" autocomplete="off"></div>
+      <div class="field"><label>Temporary password</label><input name="password" required minlength="6" autocomplete="new-password"></div>
+      <div class="field" style="flex:0 1 150px"><label>Role</label>
+        <select name="role"><option value="employee">Employee</option><option value="admin" {{ 'selected' if form.role == 'admin' }}>HR Admin</option></select></div>
+      <div class="field" style="flex:0 0 auto"><button class="btn">Create</button></div>
+    </div>
+  </form>
+  <p class="muted small" style="margin:0">Give the employee their username and temporary password. They can change it after logging in (click their name at the top).</p>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap"><table>
+    <tr><th>Name</th><th>Username</th><th>Role</th><th class="hide-sm">Created</th><th>Status</th><th></th></tr>
+    {% for u in users %}
+    <tr style="{{ 'opacity:.55' if not u.active }}">
+      <td><b>{{ u.full_name }}</b><div class="muted small">{{ u.position }}</div></td>
+      <td>{{ u.username }}</td>
+      <td>{{ 'HR Admin' if u.role == 'admin' else 'Employee' }}</td>
+      <td class="hide-sm small muted">{{ u.created_at[:10] }}</td>
+      <td>{% if u.active %}<span class="pill working">Active</span>{% else %}<span class="pill out">Deactivated</span>{% endif %}</td>
+      <td style="text-align:right"><a class="btn light sm" href="{{ url_for('admin_edit_employee', uid=u.id) }}">Edit</a></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+</div>
+{% endblock %}

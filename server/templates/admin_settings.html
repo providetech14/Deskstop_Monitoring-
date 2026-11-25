@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block body %}
+<div class="head"><div><h1>Settings</h1><div class="muted">WorkLog version {{ version }}</div></div></div>
+<div class="grid g2">
+  <div class="card">
+    <h2>Company &amp; schedule</h2>
+    <form method="post">{{ csrf() }}
+      <div class="field"><label>Company name</label><input name="company_name" value="{{ cfg.company_name }}"></div>
+      <div class="row">
+        <div class="field"><label>Work starts</label><input type="time" name="work_start" value="{{ cfg.work_start }}"></div>
+        <div class="field"><label>Work ends</label><input type="time" name="work_end" value="{{ cfg.work_end }}"></div>
+      </div>
+      <div class="field"><label>Work days</label>
+        {% set wd = cfg.work_days.split(',') %}
+        <div class="days">
+        {% for n in DAY_NAMES %}
+          <label class="day"><input type="checkbox" name="work_days" value="{{ loop.index0 }}" {{ 'checked' if loop.index0|string in wd }}> {{ n }}</label>
+        {% endfor %}
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Late grace period (minutes)</label><input type="number" min="0" name="grace_minutes" value="{{ cfg.grace_minutes }}"></div>
+        <div class="field"><label>Break allowance per day (minutes)</label><input type="number" min="0" name="break_allowance_minutes" value="{{ cfg.break_allowance_minutes }}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Screenshot every (minutes)</label><input type="number" min="1" name="screenshot_interval_minutes" value="{{ cfg.screenshot_interval_minutes }}"></div>
+        <div class="field"><label>Keep screenshots for (days, 0 = forever)</label><input type="number" min="0" name="screenshot_retention_days" value="{{ cfg.screenshot_retention_days }}"></div>
+      </div>
+      <h2 style="margin-top:10px">Voice reminder when idle</h2>
+      <p class="muted small" style="margin-top:-6px">When an employee is timed in but hasn't used the keyboard or mouse for this long, their work PC speaks this message aloud and shows it on screen. It repeats until they're back.</p>
+      <div class="field"><label>Remind after idle for (minutes, 0 = off)</label><input type="number" min="0" name="idle_alert_minutes" value="{{ cfg.idle_alert_minutes }}"></div>
+      <div class="field"><label>Spoken message ({name} = first name, {minutes} = idle minutes)</label>
+        <textarea name="idle_alert_message" rows="3" maxlength="300">{{ cfg.idle_alert_message }}</textarea></div>
+      <button class="btn">Save settings</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>How employees connect</h2>
+    <div class="connect">
+      {% if qr %}<div class="qr">{{ qr }}<div class="muted small">Scan with a phone camera</div></div>{% endif %}
+      <div>
+        <p style="margin-top:0">On the office Wi-Fi, open this address on a phone, laptop or computer:</p>
+        <p><code class="addr">{{ server_urls[0] }}</code></p>
+        {% if server_urls|length > 1 %}<p class="muted small">Other addresses of this PC: {{ server_urls[1:]|join(', ') }}</p>{% endif %}
+      </div>
+    </div>
+    <p>On each <b>work PC</b>, run <b>Install WorkLog Agent</b> from the <i>Employee Installer</i> folder. The agent finds this PC automatically, even if its address changes.</p>
+    <div class="notice">If this address changes (e.g. after restarting the router), phones need the new one. Ask your IT or internet provider to <b>reserve a fixed IP</b> for this laptop in the router.</div>
+  </div>
+
+  <div class="card">
+    <h2>Backups &amp; data</h2>
+    <p>The database is backed up automatically every day (last 30 days kept).</p>
+    <p class="small muted">Data folder: <code>{{ data_dir }}</code></p>
+    {% if backups %}<p class="small">Latest backup: <b>{{ backups[0] }}</b> ({{ backups|length }} total)</p>{% endif %}
+    <p class="small muted">Tip: once a week, copy the whole data folder to a USB drive or cloud storage.</p>
+  </div>
+
+  <div class="card">
+    <h2>Privacy</h2>
+    <div class="notice">Tell employees in writing that screenshots and keyboard/mouse activity (not what they type, only whether they are active) are recorded while timed in, and have them sign the policy (Data Privacy Act, RA 10173). The agent also shows this notice on screen.</div>
+  </div>
+</div>
+{% endblock %}

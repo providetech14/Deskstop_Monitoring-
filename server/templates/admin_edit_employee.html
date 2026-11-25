@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ u.full_name }}{% endblock %}
+{% block body %}
+<div class="head"><div><a href="{{ url_for('admin_employees') }}">← Employees</a><h1>{{ u.full_name }}</h1></div></div>
+<div class="grid g2">
+  <div class="card">
+    <h2>Details</h2>
+    <form method="post">{{ csrf() }}
+      <input type="hidden" name="do" value="save">
+      <div class="field"><label>Full name</label><input name="full_name" required value="{{ u.full_name }}"></div>
+      <div class="field"><label>Position</label><input name="position" value="{{ u.position }}"></div>
+      <div class="field"><label>Username</label><input name="username" required value="{{ u.username }}"></div>
+      <div class="field"><label>Role</label>
+        <select name="role" {{ 'disabled' if u.id == me.id }}>
+          <option value="employee">Employee</option>
+          <option value="admin" {{ 'selected' if u.role == 'admin' }}>HR Admin</option>
+        </select></div>
+      <div class="field"><label>Reset password (leave empty to keep)</label><input name="password" type="password" autocomplete="new-password" minlength="6"></div>
+      <button class="btn">Save changes</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Account access</h2>
+    <p class="muted">Deactivating blocks login on the website, phone and the work-PC agent. Attendance history is kept.</p>
+    {% if u.id != me.id %}
+    <form method="post" onsubmit="return confirm('Are you sure?')">{{ csrf() }}
+      <input type="hidden" name="do" value="toggle">
+      <button class="btn {{ 'danger' if u.active else '' }}">{{ 'Deactivate account' if u.active else 'Re-activate account' }}</button>
+    </form>
+    {% else %}<p class="muted small">This is your own account.</p>{% endif %}
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <a href="{{ url_for('admin_attendance', user=u.id, **{'from': today}) }}">View attendance →</a><br>
+    <a href="{{ url_for('admin_screenshots', user=u.id) }}">View screenshots →</a>
+  </div>
+</div>
+{% endblock %}

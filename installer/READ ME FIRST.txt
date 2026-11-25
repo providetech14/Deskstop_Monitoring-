@@ -1,0 +1,19 @@
+WORKLOG AGENT - INSTALLATION FOR WORK PCs
+==========================================
+
+1. Copy this whole folder to the employee's work PC (USB drive or shared folder).
+2. Double-click "Install WorkLog Agent.bat".
+   - If Windows says "Windows protected your PC": click "More info", then "Run anyway".
+3. The WorkLog window opens. The server address is already filled in.
+   The employee types the username and password HR gave them and clicks Log in.
+4. Done. WorkLog starts automatically every time the PC starts,
+   and there is a "WorkLog" shortcut on the Desktop.
+
+Daily use (employee):
+   Time In  ->  Start Break / End Break  ->  Time Out
+   Closing the window only minimizes it. It keeps running.
+
+To remove: double-click "Uninstall WorkLog Agent.bat".
+
+Privacy notice: while timed in (not on break), WorkLog sends screenshots
+and active/idle time (never what is typed) to HR.

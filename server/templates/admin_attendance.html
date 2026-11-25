@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block body %}
+<div class="head"><div><h1>Attendance records</h1><div class="muted">{{ d1 }}{% if d2 != d1 %} to {{ d2 }}{% endif %}</div></div>
+  <a class="btn light" href="{{ url_for('admin_attendance_csv', user=uid or '', **{'from': d1.isoformat(), 'to': d2.isoformat()}) }}">⬇ Download Excel (CSV)</a>
+</div>
+
+<div class="card">
+  <form method="get" class="row">
+    <div class="field"><label>From</label><input type="date" name="from" value="{{ d1 }}"></div>
+    <div class="field"><label>To</label><input type="date" name="to" value="{{ d2 }}"></div>
+    <div class="field"><label>Employee</label>
+      <select name="user"><option value="">All employees</option>
+        {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if u.id == uid }}>{{ u.full_name }}</option>{% endfor %}
+      </select></div>
+    <div class="field" style="flex:0 0 auto"><button class="btn">Show</button></div>
+  </form>
+</div>
+
+{% if totals %}
+<div class="card">
+  <h2>Summary</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th>Employee</th><th>Days present</th><th>Absent (work days)</th><th>Total worked</th><th>Total break</th><th>Late days</th><th>Missing time-out</th></tr>
+    {% for t in totals %}
+    <tr><td><b>{{ t.u.full_name }}</b></td><td>{{ t.days }}</td>
+      <td>{% if t.absent %}<span class="pill absent">{{ t.absent }}</span>{% else %}0{% endif %}</td>
+      <td>{{ fmt_dur(t.work) }}</td><td>{{ fmt_dur(t.break) }}</td>
+      <td>{{ t.late }}</td><td>{{ t.missing_out }}</td></tr>
+    {% endfor %}
+  </table></div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Daily records</h2>
+  {% if rows %}
+  <div class="tbl-wrap"><table>
+    <tr><th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Worked</th><th>Break</th><th>Activity</th><th>Flags</th><th>Punches</th></tr>
+    {% for r in rows %}{% set s = r.summ %}
+    <tr>
+      <td>{{ r.day.strftime('%b %d') }}</td>
+      <td><b>{{ r.u.full_name }}</b></td>
+      <td>{{ s.first_in.strftime('%I:%M %p') if s.first_in else '—' }}</td>
+      <td>{% if s.open %}<span class="muted">{{ 'still in' if r.day.isoformat() == today else 'no time out' }}</span>{% else %}{{ s.last_out.strftime('%I:%M %p') if s.last_out else '—' }}{% endif %}</td>
+      <td>{{ fmt_dur(s.work) }}</td>
+      <td>{{ fmt_dur(s.break) }}</td>
+      <td>{{ '%d%%'|format(r.activity) if r.activity is not none else '—' }}
+        {% if r.alerts %}<div class="small muted">🔊 {{ r.alerts }} idle</div>{% endif %}</td>
+      <td>
+        {% if s.late_min %}<span class="pill late">Late {{ s.late_min|mins }}</span> {% endif %}
+        {% if s.over_break %}<span class="pill break">Break +{{ s.over_break|mins }}</span> {% endif %}
+        {% if s.open and r.day.isoformat() != today %}<span class="pill absent">No time out</span>{% endif %}
+      </td>
+      <td>
+        <details><summary class="small">{{ r.events|length }} entries</summary>
+          <ul class="timeline small">
+          {% for e in r.events %}
+            <li><span>{{ ACTIONS[e.type].label if e.type in ACTIONS else e.type }} <b>{{ e.ts[11:16] }}</b> <span class="muted">{{ e.source }}</span></span>
+              <form method="post" action="{{ url_for('admin_events') }}" onsubmit="return confirm('Delete this entry?')">{{ csrf() }}
+                <input type="hidden" name="do" value="delete"><input type="hidden" name="event_id" value="{{ e.id }}">
+                <input type="hidden" name="back" value="{{ request.full_path }}">
+                <button class="btn danger sm" title="Delete entry">✕</button></form></li>
+          {% endfor %}
+          </ul>
+        </details>
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">No attendance records for this period.</p>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Add a correction</h2>
+  <p class="muted small">Use this when an employee forgot to time in, time out, or log a break.</p>
+  <form method="post" action="{{ url_for('admin_events') }}" class="row">{{ csrf() }}
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <div class="field"><label>Employee</label><select name="user_id" required>
+      {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if u.id == uid }}>{{ u.full_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Entry</label><select name="type">{% for k, a in ACTIONS.items() %}<option value="{{ k }}">{{ a.label }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Date</label><input type="date" name="date" value="{{ d2 }}" required></div>
+    <div class="field"><label>Time</label><input type="time" name="time" required></div>
+    <div class="field"><label>Reason</label><input name="note" placeholder="e.g. forgot to time out"></div>
+    <div class="field" style="flex:0 0 auto"><button class="btn">Add entry</button></div>
+  </form>
+</div>
+{% endblock %}

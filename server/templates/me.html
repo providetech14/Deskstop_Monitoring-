@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}My Time{% endblock %}
+{% block body %}
+<div class="grid g2">
+  <div class="card clock">
+    <div class="time" id="clock">--:--</div>
+    <div class="date" id="date"></div>
+    {% if status == 'working' %}<span class="pill working">Working since {{ last.ts[11:16] }}</span>
+    {% elif status == 'break' %}<span class="pill break">On break since {{ last.ts[11:16] }}</span>
+    {% else %}<span class="pill out">Not timed in</span>{% endif %}
+
+    <form method="post" action="{{ url_for('my_punch') }}" class="punch-grid">{{ csrf() }}
+      <button class="btn punch in"   name="action" value="time_in"     {{ 'disabled' if status != 'out' }}>Time In</button>
+      <button class="btn punch out"  name="action" value="time_out"    {{ 'disabled' if status == 'out' }} onclick="return confirm('Time out for today?')">Time Out</button>
+      <button class="btn punch brk"  name="action" value="break_start" {{ 'disabled' if status != 'working' }}>Start Break</button>
+      <button class="btn punch back" name="action" value="break_end"   {{ 'disabled' if status != 'break' }}>End Break</button>
+    </form>
+    <p class="muted small" style="margin-top:16px">Work starts at {{ cfg.work_start }} · Break allowance {{ cfg.break_allowance_minutes }} min</p>
+  </div>
+
+  <div class="card">
+    <h2>Today</h2>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="stat"><b>{{ fmt_dur(summ.work) }}</b><span>Worked</span></div>
+      <div class="stat"><b>{{ fmt_dur(summ.break) }}</b><span>Break</span></div>
+    </div>
+    {% if summ.late_min %}<p><span class="pill late">Late by {{ summ.late_min|mins }}</span></p>{% endif %}
+    {% if events %}
+    <ul class="timeline">
+      {% for e in events %}
+      <li><span>{{ ACTIONS[e.type].label if e.type in ACTIONS else e.type }}</span><span class="muted">{{ e.ts[11:16] }} · {{ e.source }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">No entries yet today.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Last 7 days</h2>
+  {% if hist %}
+  <div class="tbl-wrap"><table>
+    <tr><th>Date</th><th>In</th><th>Out</th><th>Worked</th><th>Break</th><th></th></tr>
+    {% for d, s in hist %}
+    <tr>
+      <td>{{ d.strftime('%a, %b %d') }}</td>
+      <td>{{ s.first_in.strftime('%I:%M %p') if s.first_in else '—' }}</td>
+      <td>{{ s.last_out.strftime('%I:%M %p') if s.last_out and not s.open else ('no time out' if s.open else '—') }}</td>
+      <td>{{ fmt_dur(s.work) }}</td><td>{{ fmt_dur(s.break) }}</td>
+      <td>{% if s.late_min %}<span class="pill late">Late {{ s.late_min|mins }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">No records in the last 7 days.</p>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function tick() {
+  var d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+  document.getElementById('date').textContent = d.toLocaleDateString([], {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
+}
+tick(); setInterval(tick, 1000);
+</script>
+{% endblock %}

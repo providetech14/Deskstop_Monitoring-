@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block body %}
+<div class="auth">
+  <div class="card">
+    <div class="logo" style="margin-bottom:14px"><span class="logo-dot">W</span> WorkLog</div>
+    <h1>{{ cfg.company_name }}</h1>
+    <p class="muted">Log in to record your time.</p>
+    <form method="post">{{ csrf() }}
+      <div class="field"><label>Username</label><input name="username" required autofocus autocomplete="username"></div>
+      <div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
+      <button class="btn" style="width:100%">Log in</button>
+    </form>
+    <p class="muted small" style="margin-bottom:0">Forgot your password? Ask HR to reset it.</p>
+  </div>
+</div>
+{% endblock %}

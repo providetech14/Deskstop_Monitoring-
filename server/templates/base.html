@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}WorkLog{% endblock %} · {{ cfg.company_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if me %}
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="{{ url_for('home') }}"><span class="logo-dot">W</span> WorkLog <small class="hide-sm">{{ cfg.company_name }}</small></a>
+    <nav>
+      {% set ep = request.endpoint %}
+      {% if me.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="{{ 'on' if ep == 'admin_dashboard' }}">Live Board</a>
+        <a href="{{ url_for('admin_attendance') }}" class="{{ 'on' if ep == 'admin_attendance' }}">Attendance</a>
+        <a href="{{ url_for('admin_screenshots') }}" class="{{ 'on' if ep == 'admin_screenshots' }}">Screenshots</a>
+        <a href="{{ url_for('admin_employees') }}" class="{{ 'on' if ep in ('admin_employees','admin_edit_employee') }}">Employees</a>
+        <a href="{{ url_for('admin_settings') }}" class="{{ 'on' if ep == 'admin_settings' }}">Settings</a>
+      {% else %}
+        <a href="{{ url_for('my_day') }}" class="{{ 'on' if ep == 'my_day' }}">My Time</a>
+      {% endif %}
+    </nav>
+    <div class="who">
+      <a href="{{ url_for('account') }}" title="Change password">{{ me.full_name }}</a>
+      <a href="{{ url_for('logout') }}" class="btn light sm">Log out</a>
+    </div>
+  </div>
+</header>
+{% endif %}
+<main>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</main>
+<div class="lightbox" id="lb" onclick="this.classList.remove('show')"><img alt="Screenshot"></div>
+<script>
+document.addEventListener('click', function (e) {
+  var img = e.target.closest('img[data-full]');
+  if (!img) return;
+  var lb = document.getElementById('lb');
+  lb.querySelector('img').src = img.dataset.full;
+  lb.classList.add('show');
+});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Live Board{% endblock %}
+{% block body %}
+<div class="head">
+  <div><h1>Live Board</h1><div class="muted">{{ today }} · refreshes every 60 seconds</div></div>
+  <a class="btn" href="{{ url_for('admin_employees') }}">+ Add employee</a>
+</div>
+
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="stat"><b style="color:var(--ok)">{{ counts.working }}</b><span>Working now</span></div>
+  <div class="stat"><b style="color:var(--warn)">{{ counts.break }}</b><span>On break</span></div>
+  <div class="stat"><b>{{ counts.out }}</b><span>Timed out</span></div>
+  <div class="stat"><b style="color:var(--bad)">{{ counts.absent }}</b><span>{{ 'Not yet timed in' if workday else 'Not timed in (rest day)' }}</span></div>
+</div>
+<p class="muted small" style="margin-top:-6px">Activity = share of working minutes with keyboard or mouse use on the work PC (from the WorkLog Agent). Low activity is not proof of slacking: calls, meetings and reading count as idle.</p>
+
+<div class="card">
+  {% if rows %}
+  <div class="tbl-wrap"><table>
+    <tr><th>Employee</th><th>Status</th><th>Time in</th><th>Worked</th><th>Break</th><th>Activity</th><th class="hide-sm">Work PC</th><th>Latest screenshot</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td><b>{{ r.u.full_name }}</b><div class="muted small">{{ r.u.position }}</div></td>
+      <td>
+        {% if r.status == 'working' %}<span class="pill working">Working</span>
+        {% elif r.status == 'break' %}<span class="pill break">On break</span>
+        {% elif r.status == 'absent' %}<span class="pill absent">Not timed in</span>
+        {% else %}<span class="pill out">Timed out</span>{% endif %}
+        {% if r.last and r.status != 'absent' %}<div class="muted small">since {{ r.last.ts[11:16] }}</div>{% endif %}
+      </td>
+      <td>{{ r.summ.first_in.strftime('%I:%M %p') if r.summ.first_in else '—' }}
+        {% if r.summ.late_min %}<div><span class="pill late">Late {{ r.summ.late_min|mins }}</span></div>{% endif %}</td>
+      <td>{{ fmt_dur(r.summ.work) }}</td>
+      <td>{{ fmt_dur(r.summ.break) }}{% if r.summ.over_break %}<div><span class="pill late">+{{ r.summ.over_break|mins }} over</span></div>{% endif %}</td>
+      <td>{% if r.activity is not none %}{% set a = r.activity %}<b>{{ a }}%</b>
+          <div class="bar {{ 'low' if a < 40 else ('mid' if a < 70 else '') }}"><i style="width:{{ a }}%"></i></div>
+        {% else %}<span class="muted">—</span>{% endif %}
+        {% if r.idle_min %}<div><span class="pill break">Idle {{ r.idle_min|mins }}</span></div>{% endif %}
+        {% if r.alerts %}<div class="small muted" title="Voice reminders given today because the PC was not used">🔊 {{ r.alerts }} idle reminder{{ 's' if r.alerts != 1 }}</div>{% endif %}</td>
+      <td class="hide-sm small"><span class="dot {{ 'on' if r.agent_online }}"></span>{{ 'Agent online' if r.agent_online else 'Agent offline' }}
+        {% if r.u.last_seen_host %}<div class="muted">{{ r.u.last_seen_host }}</div>{% endif %}</td>
+      <td>
+        {% if r.shot %}
+          <img class="thumb" src="{{ url_for('screenshot_file', sid=r.shot.id) }}" data-full="{{ url_for('screenshot_file', sid=r.shot.id) }}" alt="Latest screenshot" loading="lazy">
+          <div class="muted small">{{ r.shot.ts[5:16] }} · <a href="{{ url_for('admin_screenshots', user=r.u.id, date=r.shot.ts[:10]) }}">all</a></div>
+        {% else %}<span class="muted small">None yet</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+    <p>No employees yet. <a href="{{ url_for('admin_employees') }}">Add your first employee</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script>setTimeout(function(){ if (!document.getElementById('lb').classList.contains('show')) location.reload(); }, 60000);</script>{% endblock %}

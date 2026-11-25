@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}First-time setup{% endblock %}
+{% block body %}
+<div class="auth">
+  <div class="card">
+    <h1>Welcome to WorkLog</h1>
+    <p class="muted">First-time setup: create the HR Admin account. You can add employees after logging in.</p>
+    <form method="post">{{ csrf() }}
+      <div class="field"><label>Company name</label><input name="company_name" value="{{ request.form.company_name }}" placeholder="e.g. ProvideTech Brandwave Advertising Services"></div>
+      <div class="field"><label>Your full name</label><input name="full_name" required value="{{ request.form.full_name }}"></div>
+      <div class="field"><label>Position</label><input name="position" value="{{ request.form.position or 'HR' }}"></div>
+      <div class="field"><label>Username</label><input name="username" required autocomplete="username" value="{{ request.form.username }}"></div>
+      <div class="field"><label>Password (min. 6 characters)</label><input name="password" type="password" required autocomplete="new-password"></div>
+      <div class="field"><label>Confirm password</label><input name="confirm" type="password" required autocomplete="new-password"></div>
+      <button class="btn" style="width:100%">Create HR Admin</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
